@@ -18,7 +18,25 @@
         "command": "smartprompting.helloWorld",
         "title": "Hello World"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "smartprompting",
+          "title": "SmartPrompting",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "smartprompting": [
+        {
+          "id": "smartprompting.panel",
+          "name": "SmartPrompting",
+          "type": "webview"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
