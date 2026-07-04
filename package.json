@@ -3,6 +3,7 @@
   "displayName": "SmartPrompting",
   "description": "React-aware prompt enhancer for AI coding assistants",
   "version": "0.0.1",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.125.0"
   },
