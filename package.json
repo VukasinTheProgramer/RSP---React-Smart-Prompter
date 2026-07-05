@@ -36,6 +36,31 @@
           "type": "webview"
         }
       ]
+    },
+    "configuration": {
+      "title": "SmartPrompting",
+      "properties": {
+        "smartprompting.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Gemini API key (aistudio.google.com/apikey, free tier available). Optional — if left blank, falls back to the GEMINI_API_KEY / GOOGLE_API_KEY environment variable."
+        },
+        "smartprompting.model": {
+          "type": "string",
+          "default": "gemini-2.5-flash",
+          "enum": [
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash"
+          ],
+          "enumDescriptions": [
+            "Most capable, best question/prompt quality",
+            "Strong quality, faster and cheaper than Pro",
+            "Fastest, free-tier friendly"
+          ],
+          "description": "Gemini model used to generate clarifying questions and expand prompts."
+        }
+      }
     }
   },
   "scripts": {
@@ -53,19 +78,22 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.125.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "typescript-eslint": "^8.61.1",
-    "eslint": "^10.5.0",
+    "@types/vscode": "^1.125.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
     "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
     "npm-run-all": "^4.1.5",
     "typescript": "^6.0.3",
-    "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0"
+    "typescript-eslint": "^8.61.1"
   },
   "overrides": {
     "diff": "^8.0.4",
     "serialize-javascript": "^7.0.6"
+  },
+  "dependencies": {
+    "@google/genai": "^2.10.0"
   }
 }
