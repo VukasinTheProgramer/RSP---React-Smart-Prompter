@@ -3,6 +3,8 @@
 import * as vscode from 'vscode';
 import { SmartPromptingViewProvider } from './panel';
 import { registerContextInvalidation } from './context';
+import { promptForApiKey } from './ai';
+import { registerChatParticipant } from './chat';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -23,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposable);
 
-	const provider = new SmartPromptingViewProvider();
+	const provider = new SmartPromptingViewProvider(context.globalState);
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider('smartprompting.panel', provider)
 	);
@@ -35,6 +37,12 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.commands.executeCommand('smartprompting.panel.focus');
 		})
 	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('smartprompting.setApiKey', promptForApiKey)
+	);
+
+	registerChatParticipant(context);
 }
 
 // This method is called when your extension is deactivated

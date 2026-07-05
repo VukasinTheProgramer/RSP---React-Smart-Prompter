@@ -21,6 +21,19 @@
       {
         "command": "smartprompting.enhancePrompt",
         "title": "SmartPrompting: Enhance Prompt"
+      },
+      {
+        "command": "smartprompting.setApiKey",
+        "title": "SmartPrompting: Set API Key"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "smartprompting.chat",
+        "name": "smartprompt",
+        "fullName": "SmartPrompting",
+        "description": "Expand a rough React prompt into a precise, stack-aware one",
+        "isSticky": true
       }
     ],
     "viewsContainers": {
@@ -44,25 +57,26 @@
     "configuration": {
       "title": "SmartPrompting",
       "properties": {
+        "smartprompting.provider": {
+          "type": "string",
+          "default": "gemini",
+          "enum": ["gemini", "openai", "anthropic"],
+          "enumDescriptions": [
+            "Google Gemini — free tier available",
+            "OpenAI",
+            "Anthropic (Claude)"
+          ],
+          "description": "AI provider used to generate clarifying questions and expand prompts. Changing this does not change smartprompting.model automatically — set a model valid for the new provider, or leave it blank to use that provider's default."
+        },
         "smartprompting.apiKey": {
           "type": "string",
           "default": "",
-          "description": "Gemini API key (aistudio.google.com/apikey, free tier available). Optional — if left blank, falls back to the GEMINI_API_KEY / GOOGLE_API_KEY environment variable."
+          "description": "API key for the selected provider. Leave blank to run 'SmartPrompting: Set API Key' on first use, or to fall back to an environment variable (GEMINI_API_KEY/GOOGLE_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY, matching the provider)."
         },
         "smartprompting.model": {
           "type": "string",
-          "default": "gemini-2.5-flash",
-          "enum": [
-            "gemini-2.5-pro",
-            "gemini-2.5-flash",
-            "gemini-2.0-flash"
-          ],
-          "enumDescriptions": [
-            "Most capable, best question/prompt quality",
-            "Strong quality, faster and cheaper than Pro",
-            "Fastest, free-tier friendly"
-          ],
-          "description": "Gemini model used to generate clarifying questions and expand prompts."
+          "default": "",
+          "description": "Model ID for the selected provider. Leave blank for the default: gemini-2.5-flash, gpt-4.1-mini, or claude-opus-4-8."
         },
         "smartprompting.maxQuestions": {
           "type": "number",
@@ -70,6 +84,11 @@
           "minimum": 0,
           "maximum": 3,
           "description": "Max clarifying questions to ask before expanding the prompt. Set to 0 to always skip straight to expansion."
+        },
+        "smartprompting.docGrounding": {
+          "type": "boolean",
+          "default": false,
+          "description": "Fetch current README excerpts for the detected library versions and include them when expanding the prompt. Improves accuracy for fast-moving libraries, but adds a few seconds of latency and extra tokens per Enhance."
         }
       }
     }
@@ -105,6 +124,8 @@
     "serialize-javascript": "^7.0.6"
   },
   "dependencies": {
-    "@google/genai": "^2.10.0"
+    "@anthropic-ai/sdk": "^0.110.0",
+    "@google/genai": "^2.10.0",
+    "openai": "^6.45.0"
   }
 }
