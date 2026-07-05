@@ -57,13 +57,15 @@ function describeContext(context: ProjectContext | null): string {
 	return parts.join(', ');
 }
 
-export async function generateQuestions(context: ProjectContext | null, prompt: string): Promise<Question[]> {
+export async function generateQuestions(context: ProjectContext | null, prompt: string, maxQuestions = 3): Promise<Question[]> {
+	if (maxQuestions <= 0) {return [];}
+
 	const client = await getClient();
 	const system = `You are a React specialist helping a developer refine a coding prompt before sending it to an AI coding assistant.
 
 Detected project context: ${describeContext(context)}
 
-Only ask questions whose answer would change the generated code. Never ask something answerable from the context above. Max 3 questions, fewer is better — return an empty array if the prompt is already clear enough. Each question should have 2-4 short answer options.`;
+Only ask questions whose answer would change the generated code. Never ask something answerable from the context above. Max ${maxQuestions} question${maxQuestions === 1 ? '' : 's'}, fewer is better — return an empty array if the prompt is already clear enough. Each question should have 2-4 short answer options.`;
 
 	const response = await client.models.generateContent({
 		model: getModel(),
@@ -78,7 +80,7 @@ Only ask questions whose answer would change the generated code. Never ask somet
 	const text = response.text;
 	if (!text) {return [];}
 	const parsed = JSON.parse(text) as { questions: Question[] };
-	return parsed.questions.slice(0, 3);
+	return parsed.questions.slice(0, maxQuestions);
 }
 
 export async function expandPrompt(context: ProjectContext | null, prompt: string, qa: QaPair[]): Promise<string> {

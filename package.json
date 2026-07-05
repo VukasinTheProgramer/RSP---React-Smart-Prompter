@@ -17,6 +17,10 @@
       {
         "command": "smartprompting.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "smartprompting.enhancePrompt",
+        "title": "SmartPrompting: Enhance Prompt"
       }
     ],
     "viewsContainers": {
@@ -59,6 +63,13 @@
             "Fastest, free-tier friendly"
           ],
           "description": "Gemini model used to generate clarifying questions and expand prompts."
+        },
+        "smartprompting.maxQuestions": {
+          "type": "number",
+          "default": 3,
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Max clarifying questions to ask before expanding the prompt. Set to 0 to always skip straight to expansion."
         }
       }
     }

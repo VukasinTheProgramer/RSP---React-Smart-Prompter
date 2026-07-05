@@ -27,13 +27,19 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 			if (message.type === 'skip') {
 				this.handleAnswers(webview, []);
 			}
+			if (message.type === 'reset') {
+				this.pendingPrompt = null;
+				this.pendingContext = null;
+				this.pendingQuestions = [];
+			}
 		});
 	}
 
 	private async handleEnhance(webview: vscode.Webview, prompt: string) {
 		try {
 			const context = await detectContext();
-			const questions = await generateQuestions(context, prompt);
+			const maxQuestions = vscode.workspace.getConfiguration('smartprompting').get<number>('maxQuestions') ?? 3;
+			const questions = await generateQuestions(context, prompt, maxQuestions);
 			this.pendingPrompt = prompt;
 			this.pendingContext = context;
 			this.pendingQuestions = questions;
@@ -82,6 +88,7 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 	<div id="detected">Detecting project...</div>
 	<textarea id="prompt" placeholder="Rough prompt..."></textarea>
 	<button id="enhance">Enhance</button>
+	<button id="startOver">Start over</button>
 	<div id="questions"></div>
 	<div id="error"></div>
 	<div id="output"></div>
@@ -90,18 +97,30 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 		vscode.postMessage({ type: 'ready' });
 
 		const enhanceBtn = document.getElementById('enhance');
+		const startOverBtn = document.getElementById('startOver');
+		const promptEl = document.getElementById('prompt');
 		const questionsEl = document.getElementById('questions');
 		const errorEl = document.getElementById('error');
 		const outputEl = document.getElementById('output');
 
 		enhanceBtn.addEventListener('click', () => {
-			const prompt = document.getElementById('prompt').value;
+			const prompt = promptEl.value;
 			questionsEl.innerHTML = '';
 			outputEl.innerHTML = '';
 			errorEl.textContent = '';
 			enhanceBtn.disabled = true;
 			enhanceBtn.textContent = 'Thinking...';
 			vscode.postMessage({ type: 'enhance', prompt });
+		});
+
+		startOverBtn.addEventListener('click', () => {
+			promptEl.value = '';
+			questionsEl.innerHTML = '';
+			outputEl.innerHTML = '';
+			errorEl.textContent = '';
+			enhanceBtn.disabled = false;
+			enhanceBtn.textContent = 'Enhance';
+			vscode.postMessage({ type: 'reset' });
 		});
 
 		function renderQuestions(questions) {

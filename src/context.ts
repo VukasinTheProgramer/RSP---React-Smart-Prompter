@@ -72,16 +72,18 @@ async function pickPackageJson(activeFilePath: string | null): Promise<vscode.Ur
 	return activeFilePath ? closestTo(activeFilePath, files) : files[0];
 }
 
-export async function detectContext(): Promise<ProjectContext | null> {
-	const editor = vscode.window.activeTextEditor;
-	const activeFilePath = editor?.document.fileName ?? null;
-	const activeFileName = activeFilePath ? activeFilePath.split('/').pop() ?? null : null;
-	const isReactFile = editor?.document.languageId === 'javascriptreact'
-		|| editor?.document.languageId === 'typescriptreact';
+type DetectedLibs = Omit<ProjectContext, 'isReactFile' | 'activeFileName'>;
 
+// ponytail: cached until a package.json changes anywhere in the workspace (see
+// registerContextInvalidation). Re-picking the closest package.json per active
+// file is skipped after the first computation — fine for the common case,
+// revisit if monorepo users complain the wrong sub-project stays "sticky".
+let cachedLibs: DetectedLibs | undefined;
+
+async function computeLibs(activeFilePath: string | null): Promise<DetectedLibs> {
 	const file = await pickPackageJson(activeFilePath);
 	if (!file) {
-		return { isReactFile, activeFileName, react: null, next: null, router: null, state: null, styling: null, dataFetching: null, forms: null };
+		return { react: null, next: null, router: null, state: null, styling: null, dataFetching: null, forms: null };
 	}
 
 	const raw = await vscode.workspace.fs.readFile(file);
@@ -89,8 +91,6 @@ export async function detectContext(): Promise<ProjectContext | null> {
 	const deps: Record<string, string> = { ...pkg.peerDependencies, ...pkg.devDependencies, ...pkg.dependencies };
 
 	return {
-		isReactFile,
-		activeFileName,
 		react: deps.react ? cleanVersion(deps.react) : null,
 		next: deps.next ? cleanVersion(deps.next) : null,
 		router: pickLib(deps, LIB_GROUPS.router),
@@ -99,4 +99,30 @@ export async function detectContext(): Promise<ProjectContext | null> {
 		dataFetching: pickLib(deps, LIB_GROUPS.dataFetching),
 		forms: pickLib(deps, LIB_GROUPS.forms),
 	};
+}
+
+export function invalidateContextCache(): void {
+	cachedLibs = undefined;
+}
+
+export function registerContextInvalidation(context: vscode.ExtensionContext): void {
+	const watcher = vscode.workspace.createFileSystemWatcher('**/package.json');
+	watcher.onDidChange(invalidateContextCache);
+	watcher.onDidCreate(invalidateContextCache);
+	watcher.onDidDelete(invalidateContextCache);
+	context.subscriptions.push(watcher);
+}
+
+export async function detectContext(): Promise<ProjectContext | null> {
+	const editor = vscode.window.activeTextEditor;
+	const activeFilePath = editor?.document.fileName ?? null;
+	const activeFileName = activeFilePath ? activeFilePath.split('/').pop() ?? null : null;
+	const isReactFile = editor?.document.languageId === 'javascriptreact'
+		|| editor?.document.languageId === 'typescriptreact';
+
+	if (cachedLibs === undefined) {
+		cachedLibs = await computeLibs(activeFilePath);
+	}
+
+	return { isReactFile, activeFileName, ...cachedLibs };
 }
