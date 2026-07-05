@@ -4,6 +4,10 @@
   "description": "React-aware prompt enhancer for AI coding assistants",
   "version": "0.0.1",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VukasinTheProgramer/RSP---React-Smart-Prompter.git"
+  },
   "engines": {
     "vscode": "^1.125.0"
   },
