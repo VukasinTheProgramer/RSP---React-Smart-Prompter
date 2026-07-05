@@ -83,8 +83,3 @@ export function qaText(qa: QaPair[]): string {
 		? qa.map((p) => `Q: ${p.question}\nA: ${p.answer}`).join('\n\n')
 		: '(no clarifying questions were needed)';
 }
-
-export interface Provider {
-	generateQuestions(apiKey: string | undefined, model: string, context: ProjectContext | null, prompt: string, maxQuestions: number): Promise<Question[]>;
-	expandPrompt(apiKey: string | undefined, model: string, context: ProjectContext | null, prompt: string, qa: QaPair[]): Promise<string>;
-}

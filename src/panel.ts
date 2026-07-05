@@ -33,6 +33,9 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 					lastPrompt: this.state.get<string>(LAST_PROMPT_KEY, ''),
 					lastOutput: this.state.get<string>(LAST_OUTPUT_KEY, ''),
 					history: this.state.get<HistoryEntry[]>(HISTORY_KEY, []),
+					// The webview's copy resets when the panel hides — resync ours so the
+					// UI never silently diverges from what Enhance will actually use.
+					chosenLibraries: this.chosenLibraries,
 				});
 				detectContext().then((ctx) => {
 					webview.postMessage({ type: 'context', context: ctx });
@@ -58,6 +61,10 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 				this.pendingContext = null;
 				this.pendingQuestions = [];
 				this.chosenLibraries = [];
+				// Clear the persisted prompt/output too, or a hidden-then-reopened
+				// panel would resurrect what the user just cleared. History stays.
+				this.state.update(LAST_PROMPT_KEY, undefined);
+				this.state.update(LAST_OUTPUT_KEY, undefined);
 			}
 		});
 	}
@@ -105,7 +112,11 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 	private async handleAnswers(webview: vscode.Webview, answers: string[]) {
 		if (this.pendingPrompt === null) {return;}
 		try {
-			const qa = this.pendingQuestions.map((q, i) => ({ question: q.question, answer: answers[i] ?? '' }));
+			// Skip sends no answers — expand with no Q&A rather than fabricating
+			// question/blank-answer pairs that would only confuse the model.
+			const qa = answers.length > 0
+				? this.pendingQuestions.map((q, i) => ({ question: q.question, answer: answers[i] ?? '' }))
+				: [];
 			const text = await expandPrompt(this.pendingContext, this.pendingPrompt, qa, this.chosenLibraries);
 			await this.saveResult(webview, this.pendingPrompt, text);
 		} catch (err) {
@@ -182,14 +193,22 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 			vscode.postMessage({ type: 'suggest' });
 		});
 
-		function runEnhance(skipQuestions) {
-			const prompt = promptEl.value;
-			questionsEl.innerHTML = '';
-			outputEl.innerHTML = '';
-			errorEl.textContent = '';
+		function setThinking() {
 			enhanceBtn.disabled = true;
 			expandDirectBtn.disabled = true;
 			enhanceBtn.textContent = 'Thinking...';
+		}
+
+		function runEnhance(skipQuestions) {
+			const prompt = promptEl.value.trim();
+			if (!prompt) {
+				errorEl.textContent = 'Type a rough prompt first.';
+				return;
+			}
+			questionsEl.innerHTML = '';
+			outputEl.innerHTML = '';
+			errorEl.textContent = '';
+			setThinking();
 			vscode.postMessage({ type: 'enhance', prompt, skipQuestions });
 		}
 
@@ -344,12 +363,14 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 			submit.addEventListener('click', () => {
 				const answers = questions.map((_, i) => document.getElementById('q' + i).value);
 				questionsEl.innerHTML = '';
+				setThinking();
 				vscode.postMessage({ type: 'answers', answers });
 			});
 			const skip = document.createElement('button');
 			skip.textContent = 'Skip questions';
 			skip.addEventListener('click', () => {
 				questionsEl.innerHTML = '';
+				setThinking();
 				vscode.postMessage({ type: 'skip' });
 			});
 			questionsEl.appendChild(submit);
@@ -371,6 +392,10 @@ export class SmartPromptingViewProvider implements vscode.WebviewViewProvider {
 			if (event.data.type === 'restore') {
 				if (event.data.lastPrompt) promptEl.value = event.data.lastPrompt;
 				if (event.data.lastOutput) renderOutput(event.data.lastOutput);
+				if (Array.isArray(event.data.chosenLibraries) && event.data.chosenLibraries.length) {
+					chosenLibraries = event.data.chosenLibraries;
+					renderChosen();
+				}
 				renderHistory(event.data.history);
 			}
 			if (event.data.type === 'context') {
