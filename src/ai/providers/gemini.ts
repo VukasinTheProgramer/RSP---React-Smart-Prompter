@@ -1,5 +1,5 @@
-import { ProjectContext } from '../context';
-import { Question, QaPair, QUESTIONS_SCHEMA, questionsSystemPrompt, expandSystemPrompt, qaText } from './types';
+import { ProjectContext } from '../../context';
+import { Question, QaPair, QUESTIONS_SCHEMA, questionsSystemPrompt, expandSystemPrompt, explainSuggestionSystemPrompt, explainSuggestionUserMessage, qaText } from './types';
 
 async function getClient(apiKey: string | undefined) {
 	const { GoogleGenAI } = await import('@google/genai');
@@ -33,6 +33,17 @@ export async function expandPrompt(apiKey: string | undefined, model: string, co
 		model,
 		contents: `Rough prompt:\n${prompt}\n\nClarifying Q&A:\n${qaText(qa)}`,
 		config: { systemInstruction: expandSystemPrompt(context, chosenLibraries, docs) },
+	});
+
+	return response.text ?? '';
+}
+
+export async function explainSuggestion(apiKey: string | undefined, model: string, context: ProjectContext | null, category: string, pkg: string, note: string): Promise<string> {
+	const client = await getClient(apiKey);
+	const response = await client.models.generateContent({
+		model,
+		contents: explainSuggestionUserMessage(category, pkg, note),
+		config: { systemInstruction: explainSuggestionSystemPrompt(context) },
 	});
 
 	return response.text ?? '';

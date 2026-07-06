@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(disposable);
 
-	const provider = new SmartPromptingViewProvider(context.globalState);
+	const provider = new SmartPromptingViewProvider(context.globalState, context.extensionUri);
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider('smartprompting.panel', provider)
 	);

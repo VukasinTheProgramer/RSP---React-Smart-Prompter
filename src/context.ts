@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { LibCategory, LIB_GROUPS, LIB_CATEGORIES } from './libGroups';
+import { MAX_SELECTED_CODE_CHARS, MAX_IMPORTS, MAX_ADDITIONAL_FILE_CHARS, MAX_ADDITIONAL_FILES } from './constants';
 
 export { LIB_CATEGORIES };
 
@@ -15,12 +16,9 @@ export interface ProjectContext extends Record<LibCategory, string | null> {
 	selectedCode: string | null;
 	// Import lines from the active file — what's actually in scope, not just installed.
 	imports: string[];
+	// Extra files the developer explicitly picked (e.g. for a multi-file refactor).
+	additionalFiles?: { name: string; content: string }[];
 }
-
-// ponytail: cap the snippet so a huge selection doesn't blow up the API call's
-// token cost; raise this if truncation turns out to hurt question quality.
-const MAX_SELECTED_CODE_CHARS = 2000;
-const MAX_IMPORTS = 40;
 
 // Regex over `import ... from '...'` — enough to know what's in scope without an
 // AST parser. Captures the import clause (named/default/namespace) + the module.
@@ -28,12 +26,30 @@ const MAX_IMPORTS = 40;
 function extractImports(source: string): string[] {
 	const re = /import\s+(?:type\s+)?([\w*\s{},]+?)\s+from\s+['"]([^'"]+)['"]/g;
 	const imports: string[] = [];
-	let match: RegExpExecArray | null;
-	while ((match = re.exec(source)) !== null && imports.length < MAX_IMPORTS) {
+	let match = re.exec(source);
+	while (match !== null && imports.length < MAX_IMPORTS) {
 		const clause = match[1].replace(/\s+/g, ' ').trim();
 		imports.push(`${clause} from ${match[2]}`);
+		match = re.exec(source);
 	}
 	return imports;
+}
+
+// Reads user-picked files for cross-file context. Skips any that failed to
+// read (deleted/moved since picked) rather than failing the whole request.
+async function readAdditionalFiles(paths: string[]): Promise<{ name: string; content: string }[]> {
+	const results: { name: string; content: string }[] = [];
+	for (const filePath of paths.slice(0, MAX_ADDITIONAL_FILES)) {
+		try {
+			const raw = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath));
+			const text = Buffer.from(raw).toString('utf8');
+			const content = text.length > MAX_ADDITIONAL_FILE_CHARS ? text.slice(0, MAX_ADDITIONAL_FILE_CHARS) + '\n… (truncated)' : text;
+			results.push({ name: filePath.split('/').pop() ?? filePath, content });
+		} catch {
+			// skip unreadable file
+		}
+	}
+	return results;
 }
 
 function cleanVersion(v: string): string {
@@ -154,7 +170,7 @@ export function registerContextInvalidation(context: vscode.ExtensionContext): v
 	context.subscriptions.push(watcher);
 }
 
-export async function detectContext(): Promise<ProjectContext | null> {
+export async function detectContext(additionalFilePaths: string[] = []): Promise<ProjectContext | null> {
 	const editor = vscode.window.activeTextEditor;
 	const activeFilePath = editor?.document.fileName ?? null;
 	const activeFileName = activeFilePath ? activeFilePath.split('/').pop() ?? null : null;
@@ -168,10 +184,11 @@ export async function detectContext(): Promise<ProjectContext | null> {
 	}
 
 	const imports = editor && isReactFile ? extractImports(editor.document.getText()) : [];
+	const additionalFiles = await readAdditionalFiles(additionalFilePaths);
 
 	if (cachedLibs === undefined) {
 		cachedLibs = await computeLibs(activeFilePath);
 	}
 
-	return { isReactFile, activeFileName, selectedCode, imports, ...cachedLibs };
+	return { isReactFile, activeFileName, selectedCode, imports, additionalFiles, ...cachedLibs };
 }

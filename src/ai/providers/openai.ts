@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import { ProjectContext } from '../context';
-import { Question, QaPair, QUESTIONS_SCHEMA, questionsSystemPrompt, expandSystemPrompt, qaText } from './types';
+import { ProjectContext } from '../../context';
+import { Question, QaPair, QUESTIONS_SCHEMA, questionsSystemPrompt, expandSystemPrompt, explainSuggestionSystemPrompt, explainSuggestionUserMessage, qaText } from './types';
 
 function getClient(apiKey: string | undefined): OpenAI {
 	// No key configured: let the SDK fall back to the OPENAI_API_KEY env var.
@@ -36,6 +36,19 @@ export async function expandPrompt(apiKey: string | undefined, model: string, co
 		messages: [
 			{ role: 'system', content: expandSystemPrompt(context, chosenLibraries, docs) },
 			{ role: 'user', content: `Rough prompt:\n${prompt}\n\nClarifying Q&A:\n${qaText(qa)}` },
+		],
+	});
+
+	return response.choices[0]?.message?.content ?? '';
+}
+
+export async function explainSuggestion(apiKey: string | undefined, model: string, context: ProjectContext | null, category: string, pkg: string, note: string): Promise<string> {
+	const client = getClient(apiKey);
+	const response = await client.chat.completions.create({
+		model,
+		messages: [
+			{ role: 'system', content: explainSuggestionSystemPrompt(context) },
+			{ role: 'user', content: explainSuggestionUserMessage(category, pkg, note) },
 		],
 	});
 

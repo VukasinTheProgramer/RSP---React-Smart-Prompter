@@ -1,12 +1,5 @@
+import { GROUND_CATEGORIES, MAX_LIBS, MAX_README_CHARS, FETCH_TIMEOUT_MS } from './constants';
 import { ProjectContext } from './context';
-import { LibCategory } from './libGroups';
-
-// Categories where API surface shifts most between major versions — grounding
-// these with current docs pays off most. Ordered by priority.
-const GROUND_CATEGORIES: LibCategory[] = ['router', 'dataFetching', 'forms', 'state', 'uiKit'];
-const MAX_LIBS = 4;
-const MAX_README_CHARS = 1200;
-const FETCH_TIMEOUT_MS = 4000;
 
 // Session cache keyed by "name@version" so we never re-fetch the same README.
 const readmeCache = new Map<string, string | null>();

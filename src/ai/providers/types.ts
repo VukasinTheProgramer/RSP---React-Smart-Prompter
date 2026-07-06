@@ -1,4 +1,4 @@
-import { ProjectContext, LIB_CATEGORIES } from '../context';
+import { ProjectContext, LIB_CATEGORIES } from '../../context';
 
 export interface Question {
 	question: string;
@@ -62,10 +62,16 @@ function importsBlock(context: ProjectContext | null): string {
 	return `\n\nThe active file already imports these — reuse them where relevant instead of re-creating equivalents:\n${context.imports.map((i) => `- ${i}`).join('\n')}`;
 }
 
+function additionalFilesBlock(context: ProjectContext | null): string {
+	if (!context?.additionalFiles?.length) {return '';}
+	const files = context.additionalFiles.map((f) => `--- ${f.name} ---\n${f.content}`).join('\n\n');
+	return `\n\nThe developer also provided these related files for cross-file context — keep any changes consistent with them (naming, structure, shared types):\n\n${files}`;
+}
+
 export function questionsSystemPrompt(context: ProjectContext | null, maxQuestions: number, chosenLibraries: string[] = []): string {
 	return `You are a React specialist helping a developer refine a coding prompt before sending it to an AI coding assistant.
 
-Detected project context: ${describeContext(context)}${chosenLibrariesLine(chosenLibraries)}${selectedCodeBlock(context)}${importsBlock(context)}
+Detected project context: ${describeContext(context)}${chosenLibrariesLine(chosenLibraries)}${selectedCodeBlock(context)}${importsBlock(context)}${additionalFilesBlock(context)}
 
 Only ask questions whose answer would change the generated code. Never ask something answerable from the context above, the chosen libraries, or the selected code. Max ${maxQuestions} question${maxQuestions === 1 ? '' : 's'}, fewer is better — return an empty array if the prompt is already clear enough. Each question should have 2-4 short answer options.`;
 }
@@ -73,9 +79,21 @@ Only ask questions whose answer would change the generated code. Never ask somet
 export function expandSystemPrompt(context: ProjectContext | null, chosenLibraries: string[] = [], docs = ''): string {
 	return `You are a React specialist helping a developer refine a coding prompt before sending it to an AI coding assistant.
 
-Detected project context: ${describeContext(context)}${chosenLibrariesLine(chosenLibraries)}${selectedCodeBlock(context)}${importsBlock(context)}${docs}
+Detected project context: ${describeContext(context)}${chosenLibrariesLine(chosenLibraries)}${selectedCodeBlock(context)}${importsBlock(context)}${additionalFilesBlock(context)}${docs}
 
 Expand the developer's rough prompt into a precise, detailed prompt. State the goal, the exact library versions to target based on the context above, constraints (styling approach, state pattern already in use), and what NOT to do (e.g. don't introduce a different state library than the one detected). If a UI kit or icon library was detected, tell the assistant to reuse its existing components/icons instead of building new ones or pulling in a different library. If code was selected, tell the assistant to match its existing naming and patterns. Respond with only the expanded prompt as plain text, no preamble.`;
+}
+
+export function explainSuggestionSystemPrompt(context: ProjectContext | null): string {
+	return `You are a React specialist explaining a library recommendation to a developer.
+
+Detected project context: ${describeContext(context)}${importsBlock(context)}${additionalFilesBlock(context)}
+
+The developer was shown a suggested package for a category their project doesn't currently cover. Explain in 2-3 short sentences, specific to THIS project's detected stack, why it fits and what gap it fills — not generic marketing copy. Respond with only the explanation as plain text, no preamble.`;
+}
+
+export function explainSuggestionUserMessage(category: string, pkg: string, note: string): string {
+	return `Category: ${category}\nSuggested package: ${pkg}\nGeneric note: ${note}`;
 }
 
 export function qaText(qa: QaPair[]): string {

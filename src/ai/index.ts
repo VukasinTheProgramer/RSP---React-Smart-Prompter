@@ -1,38 +1,13 @@
 import * as vscode from 'vscode';
-import { ProjectContext } from './context';
-import { fetchDocGrounding } from './docGrounding';
+import { ProjectContext } from '../context';
+import { fetchDocGrounding } from '../docGrounding';
 import { Question, QaPair } from './providers/types';
 import * as gemini from './providers/gemini';
 import * as openai from './providers/openai';
 import * as anthropic from './providers/anthropic';
-
-type ProviderName = 'gemini' | 'openai' | 'anthropic';
+import { ProviderName, DEFAULT_MODELS, ENV_VARS, LABELS, KEY_URLS } from '../constants';
 
 const PROVIDERS: Record<ProviderName, typeof gemini> = { gemini, openai, anthropic };
-
-const DEFAULT_MODELS: Record<ProviderName, string> = {
-	gemini: 'gemini-2.5-flash',
-	openai: 'gpt-4.1-mini',
-	anthropic: 'claude-opus-4-8',
-};
-
-const ENV_VARS: Record<ProviderName, string[]> = {
-	gemini: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
-	openai: ['OPENAI_API_KEY'],
-	anthropic: ['ANTHROPIC_API_KEY'],
-};
-
-const LABELS: Record<ProviderName, string> = {
-	gemini: 'Gemini',
-	openai: 'OpenAI',
-	anthropic: 'Anthropic (Claude)',
-};
-
-const KEY_URLS: Record<ProviderName, string> = {
-	gemini: 'https://aistudio.google.com/apikey',
-	openai: 'https://platform.openai.com/api-keys',
-	anthropic: 'https://console.anthropic.com/settings/keys',
-};
 
 function config() {
 	return vscode.workspace.getConfiguration('smartprompting');
@@ -122,6 +97,11 @@ export async function expandPrompt(context: ProjectContext | null, prompt: strin
 	const provider = getProvider();
 	const docs = config().get<boolean>('docGrounding') ? await fetchDocGrounding(context) : '';
 	return PROVIDERS[provider].expandPrompt(getConfiguredApiKey(), getModel(provider), context, prompt, qa, chosenLibraries, docs);
+}
+
+export async function explainSuggestion(context: ProjectContext | null, category: string, pkg: string, note: string): Promise<string> {
+	const provider = getProvider();
+	return PROVIDERS[provider].explainSuggestion(getConfiguredApiKey(), getModel(provider), context, category, pkg, note);
 }
 
 export type { Question };

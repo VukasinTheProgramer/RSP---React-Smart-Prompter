@@ -1,5 +1,6 @@
 import { LibCategory } from './libGroups';
 import { ProjectContext } from './context';
+import { SUGGEST_ORDER } from './constants';
 
 export type CompatTier = 'high' | 'medium' | 'low';
 
@@ -108,13 +109,6 @@ export interface CategorySuggestion {
 	// Ordered options: the panel shows the first, and "reject" cycles to the next.
 	options: LibraryRecommendation[];
 }
-
-// Categories worth proactively suggesting, in the order they should appear.
-const SUGGEST_ORDER: LibCategory[] = [
-	'uiKit', 'styling', 'icons', 'state', 'dataFetching', 'forms', 'validation',
-	'router', 'animation', 'charts', 'tables', 'dragDrop', 'notifications',
-	'auth', 'dates', 'i18n', 'testing',
-];
 
 // Suggest a library only for categories the project doesn't already cover, so we
 // never nudge a second state manager / styling approach onto an existing stack.

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { detectContext } from './context';
-import { expandPrompt, ensureApiKey, friendlyError } from './ai';
+import { detectContext } from '../context';
+import { expandPrompt, ensureApiKey, friendlyError } from '../ai';
 
 // Chat is a linear conversation, so the participant runs the direct-expansion
 // path (no interactive clarifying questions — the sidebar panel keeps those).
