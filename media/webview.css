@@ -7,17 +7,23 @@ select { width: 100%; margin-top: 4px; }
 #error { color: var(--vscode-errorForeground); margin-top: 8px; }
 .question { margin-top: 8px; }
 #chosen { margin-top: 8px; font-size: 0.9em; opacity: 0.8; }
-.suggestion { position: relative; margin-top: 8px; padding: 8px; border: 1px solid var(--vscode-panel-border); border-radius: 4px; }
-.suggestion .close { position: absolute; top: 4px; right: 4px; opacity: 0.6; padding: 0 4px; margin: 0; }
+.suggestion { margin-top: 10px; padding: 10px; border: 1px solid var(--vscode-panel-border); border-radius: 6px; background: var(--vscode-editor-background); }
+.suggestion-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.suggestion .close { flex: 0 0 auto; min-width: 22px; min-height: 22px; line-height: 1; opacity: 0.7; padding: 0; margin: 0; border-radius: 4px; }
+.suggestion .close:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.2)); }
 #pickedFiles { margin-top: 4px; }
 .file-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; margin: 2px 4px 2px 0; border: 1px solid var(--vscode-panel-border); border-radius: 10px; font-size: 0.85em; }
 .file-chip .file-x { opacity: 0.6; padding: 0 2px; margin: 0; }
-.suggestion .cat { text-transform: capitalize; opacity: 0.7; font-size: 0.85em; }
+.suggestion .cat { text-transform: capitalize; opacity: 0.7; font-size: 0.85em; font-weight: 600; letter-spacing: 0.02em; }
+.suggestion .pkg-line { margin-top: 4px; display: flex; align-items: center; gap: 6px; }
 .suggestion .pkg { font-weight: bold; }
-.suggestion .note { font-size: 0.9em; opacity: 0.85; margin: 2px 0; }
+.suggestion .note { font-size: 0.9em; opacity: 0.85; margin: 4px 0; }
 .suggestion .pairs { font-size: 0.85em; opacity: 0.75; }
 .suggestion .why { font-size: 0.85em; opacity: 0.85; margin-top: 4px; font-style: italic; }
-.tier { font-size: 0.75em; padding: 1px 6px; border-radius: 8px; margin-left: 6px; }
+.suggestion .actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.suggestion .actions button { margin: 0; }
+.suggestion .actions .primary { font-weight: 600; }
+.tier { font-size: 0.75em; padding: 1px 6px; border-radius: 8px; }
 .tier-high { background: rgba(80, 200, 120, 0.25); }
 .tier-medium { background: rgba(230, 190, 80, 0.25); }
 .tier-low { background: rgba(200, 120, 120, 0.25); }

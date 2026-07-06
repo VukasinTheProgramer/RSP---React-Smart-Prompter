@@ -145,17 +145,22 @@ function renderSuggestions(suggestions) {
 			const opt = s.options[idx];
 			card.innerHTML = '';
 
+			const header = document.createElement('div');
+			header.className = 'suggestion-header';
+
+			const cat = document.createElement('span');
+			cat.className = 'cat';
+			cat.textContent = s.category;
+			header.appendChild(cat);
+
 			const close = document.createElement('button');
 			close.className = 'close';
 			close.textContent = '×';
 			close.title = 'Dismiss';
 			close.addEventListener('click', () => card.remove());
-			card.appendChild(close);
+			header.appendChild(close);
 
-			const cat = document.createElement('div');
-			cat.className = 'cat';
-			cat.textContent = s.category;
-			card.appendChild(cat);
+			card.appendChild(header);
 
 			const pkg = document.createElement('span');
 			pkg.className = 'pkg';
@@ -164,6 +169,7 @@ function renderSuggestions(suggestions) {
 			tier.className = 'tier tier-' + opt.tier;
 			tier.textContent = opt.tier + ' compat';
 			const pkgLine = document.createElement('div');
+			pkgLine.className = 'pkg-line';
 			pkgLine.appendChild(pkg);
 			pkgLine.appendChild(tier);
 			card.appendChild(pkgLine);
@@ -180,7 +186,11 @@ function renderSuggestions(suggestions) {
 				card.appendChild(pairs);
 			}
 
+			const actions = document.createElement('div');
+			actions.className = 'actions';
+
 			const accept = document.createElement('button');
+			accept.className = 'primary';
 			accept.textContent = 'Use this';
 			accept.addEventListener('click', () => {
 				addChosen([opt.package].concat(opt.pairsWith || []));
@@ -207,9 +217,10 @@ function renderSuggestions(suggestions) {
 				vscode.postMessage({ type: 'explainSuggestion', category: s.category, package: opt.package, note: opt.note });
 			});
 
-			card.appendChild(accept);
-			card.appendChild(other);
-			card.appendChild(why);
+			actions.appendChild(accept);
+			actions.appendChild(other);
+			actions.appendChild(why);
+			card.appendChild(actions);
 			card.appendChild(explain);
 		}
 
