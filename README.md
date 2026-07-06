@@ -16,7 +16,9 @@ No key configured? The extension also reads `GEMINI_API_KEY` / `GOOGLE_API_KEY`,
 ## What it does
 
 - **Detects your stack.** Scans `package.json` (monorepo-aware) across 19 categories — router, state, styling, data-fetching, forms, UI kit, icons, testing, animation, charts, tables, drag-drop, notifications, validation, auth, i18n, dates, build tool, backend — plus your React/Next version, App Router vs Pages Router, the active file's imports, and any code you have selected.
-- **Suggest libraries.** For categories your project doesn't cover, click **Suggest libraries** for curated, compatibility-tiered picks (high/medium/low) with a reason and what pairs well with it. Accept, cycle to an alternative, or skip — no library gets pushed onto an already-covered category.
+- **Suggest libraries.** For categories your project doesn't cover, click **Suggest libraries** for curated, compatibility-tiered picks (high/medium/low) with a reason and what pairs well with it. Accept, cycle to an alternative, dismiss with the **×**, or skip — no library gets pushed onto an already-covered category.
+- **"Why?" on demand.** Click **Why?** on any suggestion for an AI-generated explanation tailored to your actual detected stack, not just the generic note. This is the only part of suggestions that calls the API, and only when you click it — nothing generates automatically.
+- **Add files for context.** For prompts touching multiple files (e.g. a refactor across pages), click **Add files for context** to pick related files from your workspace. Their contents get fed into Enhance alongside the active file.
 - **Asks sharp questions.** Enhance generates 0–3 clarifying questions (skipped automatically if the prompt's already clear, or force this with the **Just expand** button). Answer via dropdowns, or hit Skip.
 - **Expands with full context.** The final prompt targets your exact library versions, reuses your existing components/icons/imports, states what NOT to do, and (optionally) grounds itself in current library docs — see `smartprompting.docGrounding` below.
 - **Persists across reloads.** Your last prompt/output and a 10-entry history (with re-copy and reuse buttons) survive hiding the panel or restarting VS Code.
@@ -44,7 +46,7 @@ No key configured? The extension also reads `GEMINI_API_KEY` / `GOOGLE_API_KEY`,
 | Anthropic | `claude-haiku-4-5` | Fastest and cheapest Claude |
 | Anthropic | `claude-opus-4-8` *(default)* | Most capable, highest cost |
 
-Each Enhance click makes one or two model calls (question generation is skipped entirely at `maxQuestions: 0` or via **Just expand**). At default settings that's roughly a fraction of a cent per use on any provider — the free-tier "flash"/"mini"/"haiku" tiers cost effectively nothing for normal daily use. Library suggestions are free — that step is local data, no API call.
+Each Enhance click makes one or two model calls (question generation is skipped entirely at `maxQuestions: 0` or via **Just expand**). At default settings that's roughly a fraction of a cent per use on any provider — the free-tier "flash"/"mini"/"haiku" tiers cost effectively nothing for normal daily use. Library suggestions themselves are free — that step is local data, no API call — only clicking **Why?** on a specific suggestion makes a (small) call.
 
 ## Commands
 
